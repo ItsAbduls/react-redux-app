@@ -1,45 +1,46 @@
-import React,{useState} from "react";
+import React, { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { postAdded } from "./postSlice";
+import { addNewPost } from "./postSlice";
 import { selectAllUsers } from "../users/userSlice";
 
-const AddPostForm = ()=>{
+const AddPostForm = () => {
     const dispatch = useDispatch();
     const [title, setTitle] = useState('');
     const [content, setContent] = useState('');
     const [userId, setUserId] = useState('');
+    const [addRequestStatus, setAddRequestStatus] = useState('idle');
 
     const users = useSelector(selectAllUsers);
 
-    const onTitleChange =(e)=> setTitle(e.target.value);
-    const onContentChange = (e)=> setContent(e.target.value);
-    const onAuthorChange = (e)=> setUserId(parseInt(e.target.value));
+    const onTitleChange = (e) => setTitle(e.target.value);
+    const onContentChange = (e) => setContent(e.target.value);
+    const onAuthorChange = (e) => setUserId(parseInt(e.target.value));
 
-    const onSavePostClicked = ()=>{
-        if(title && content)
-        {
-            dispatch(
-                postAdded(
-                    title,
-                    content,
-                    userId
-                    )
-            );
+    const canSave = [title, content, userId].every(Boolean) && addRequestStatus === 'idle';
 
-            setTitle('');
-            setContent('');
+    const onSavePostClicked = () => {
+        if (canSave) {
+            try {
+                setAddRequestStatus('pending');
+                dispatch(addNewPost({ title, body: content, userId })).unwrap();
+                setTitle('');
+                setContent('');
+                setUserId('');
+            } catch (error) {
+                console.error('Failed to save the post', error);
+            } finally{
+                setAddRequestStatus('idle');
+            }
         }
     }
 
-    const userOptions = users.map(user=>(
+    const userOptions = users.map(user => (
         <option key={user.id} value={user.id}>
             {user.name}
         </option>
     ));
 
-    const canSave = Boolean(title) && Boolean(content) && Boolean(userId);
-    
-    return(
+    return (
         <section>
             <h2>Add new post</h2>
             <form>
@@ -50,12 +51,12 @@ const AddPostForm = ()=>{
                     name="postTitle"
                     value={title}
                     onChange={onTitleChange}
-                /><br/>
+                /><br />
                 <label htmlFor="postAuthor">Select user</label>
                 <select id="postAuthor" value={userId} onChange={onAuthorChange}>
                     <option value=""></option>
                     {userOptions}
-                </select><br/>
+                </select><br />
 
                 <label htmlFor="postContent">Post content</label>
                 <input
@@ -64,8 +65,8 @@ const AddPostForm = ()=>{
                     name="postContent"
                     value={content}
                     onChange={onContentChange}
-                /><br/>
-                <button 
+                /><br />
+                <button
                     type="button"
                     onClick={onSavePostClicked}
                     disabled={!canSave}
