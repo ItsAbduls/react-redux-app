@@ -20,7 +20,7 @@ const postList = () => {
     if (postStatus === 'loading') {
         content = <p>"Loading..."</p>;
     } else if (postStatus === 'succeeded' && posts.length>0) {
-        const renderedPost = posts.slice().sort((a,b) =>  new Date(b.date) - new Date(a.date));
+        const renderedPost = [...posts];
         let i=1;
         content = renderedPost.map(post => <PostsExcerpt key={post.id+(i++)} post={post} />)
     } else if (postStatus === 'failed') {
